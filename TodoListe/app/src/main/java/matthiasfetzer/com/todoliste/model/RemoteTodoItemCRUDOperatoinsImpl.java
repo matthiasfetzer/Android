@@ -27,7 +27,7 @@ public class RemoteTodoItemCRUDOperatoinsImpl implements ITodoItemCRUDOperations
         @GET("/api/todos/{id}")
         public Call<TodoItem> readTodoItem(@Path("id") long id);
 
-        @PUT("/api/todos{id}")
+        @PUT("/api/todos/{id}")
         public Call<TodoItem> updateTodoItem(@Path("id") long id, @Body TodoItem todoItem);
 
         @PUT("/api/users/auth")

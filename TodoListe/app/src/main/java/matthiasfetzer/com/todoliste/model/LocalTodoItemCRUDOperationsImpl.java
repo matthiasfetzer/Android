@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations {
@@ -19,7 +20,7 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
         db = context.openOrCreateDatabase("mydb.sqlite", context.MODE_PRIVATE, null);
         if (db.getVersion() == 0) {
             db.setVersion(1);
-            db.execSQL("CREATE TABLE TODOITEMS (ID INTEGER PRIMARY KEY, NAME TEXT, DESCRIPTION TEXT, DONE BOOLEAN, IMPORTANT BOOLEAN, DUEDATE LONG)");
+            db.execSQL("CREATE TABLE TODOITEMS (ID INTEGER PRIMARY KEY, NAME TEXT, DESCRIPTION TEXT, DONE BOOLEAN, IMPORTANT BOOLEAN, DUEDATE LONG, CONTACTS TEXT)");
         }
     }
 
@@ -33,6 +34,14 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
         values.put("IMPORTANT", todoItem.isImportant());
         values.put("DUEDATE", todoItem.getDate());
 
+        StringBuilder contacts = new StringBuilder();
+
+        for (String contact: todoItem.getContacts()) {
+            contacts.append(contact);
+            contacts.append(",");
+        }
+        values.put("CONTACTS", contacts.toString());
+
         long id = db.insert("TODOITEMS", null, values);
         todoItem.setId(id);
 
@@ -43,7 +52,7 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
     public List<TodoItem> readAllTodoItems() {
 
         List<TodoItem> todoItems = new ArrayList<TodoItem>();
-        Cursor cursor = db.query("TODOITEMS", new String[]{"ID", "NAME", "DESCRIPTION", "DONE", "IMPORTANT", "DUEDATE"}, null, null,null, null, "id");
+        Cursor cursor = db.query("TODOITEMS", new String[]{"ID", "NAME", "DESCRIPTION", "DONE", "IMPORTANT", "DUEDATE", "CONTACTS"}, null, null,null, null, "id");
         if (cursor.getCount()  > 0) {
             cursor.moveToFirst();
             boolean next = false;
@@ -56,10 +65,13 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
                 boolean done = cursor.getInt(cursor.getColumnIndex("DONE")) == 1?true:false;
                 boolean important = cursor.getInt(cursor.getColumnIndex("IMPORTANT"))== 1?true:false;
                 long date = cursor.getLong(cursor.getColumnIndex("DUEDATE"));
-
+                String contactList = cursor.getString(cursor.getColumnIndex("CONTACTS"));
+                List<String> contacts = Arrays.asList(contactList.split(","));
                 TodoItem todoItem = new TodoItem(name, description, done, important, date);
                 todoItem.setId(id);
+                todoItem.setContacts(contacts);
                 todoItems.add(todoItem);
+
                 next = cursor.moveToNext();
             } while (next);
         }
@@ -81,8 +93,10 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
             boolean done = cursor.getInt(cursor.getColumnIndex("DONE")) == 1 ? true : false;
             boolean important = cursor.getInt(cursor.getColumnIndex("IMPORTANT")) == 1 ? true : false;
             long date = cursor.getLong(cursor.getColumnIndex("DUEDATE"));
-
+            String contactList = cursor.getString(cursor.getColumnIndex("CONTACTS"));
+            List<String> contacts = Arrays.asList(contactList.split(","));
             TodoItem todoItem = new TodoItem(name, description, done, important, date);
+            todoItem.setContacts(contacts);
             todoItem.setId(dbId);
 
             return todoItem;
@@ -100,6 +114,8 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
         newValues.put("DONE", todoItem.isTodoDone());
         newValues.put("IMPORTANT", todoItem.isImportant());
         newValues.put("DUEDATE", todoItem.getDate());
+        newValues.put("CONTACTS", contactListToComSep(todoItem));
+
 
         int updatedRows = db.update("TODOITEMS", newValues, "ID=?", new String[]{String.valueOf(id)});
         if (updatedRows > 0) {
@@ -123,6 +139,16 @@ public class LocalTodoItemCRUDOperationsImpl implements ITodoItemCRUDOperations 
     @Override
     public boolean deleteAllTodoItems() {
         throw new RuntimeException("only on Web App implemented yet !!");
+    }
+
+    private String contactListToComSep (TodoItem todoItem) {
+
+        StringBuilder contacts = new StringBuilder();
+        for (String contact: todoItem.getContacts()) {
+            contacts.append(contact);
+            contacts.append(",");
+        }
+        return contacts.toString();
     }
 
 }

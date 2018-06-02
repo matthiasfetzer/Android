@@ -28,15 +28,16 @@ import android.widget.Switch;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import matthiasfetzer.com.todoliste.model.TodoItem;
 
 
-public class TotoListeDetailView extends AppCompatActivity {
+public class TodoListDetailView extends AppCompatActivity {
 
     public static final int RESULT_DELETE = 3;
     private TodoItem todoItem;
@@ -63,6 +64,8 @@ public class TotoListeDetailView extends AppCompatActivity {
         final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
         todoItem = (TodoItem) getIntent().getSerializableExtra ("todoItem");
 
+
+
         if (todoItem != null) {
             todoName.setText(todoItem.getName());
             todoDescription.setText(todoItem.getDescription());
@@ -80,8 +83,10 @@ public class TotoListeDetailView extends AppCompatActivity {
             timeSelector.setText(timeFormat.format(calender.getTime()));
         }
 
-
-
+        // if no contact is set yet initialize Array List
+        if (todoItem.getContacts() == null) {
+            todoItem.setContacts(new ArrayList<String>());
+        }
 
 
         dateSelector.setOnClickListener(new View.OnClickListener(){
@@ -89,7 +94,7 @@ public class TotoListeDetailView extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                DatePickerDialog datePickerDialog = new DatePickerDialog(TotoListeDetailView.this,new DatePickerDialog.OnDateSetListener() {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(TodoListDetailView.this,new DatePickerDialog.OnDateSetListener() {
                     @Override
                     public void onDateSet(DatePicker view, int year, int month, int day) {
                         calender.set(year, month, day);
@@ -106,7 +111,7 @@ public class TotoListeDetailView extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                TimePickerDialog timePickerDialog = new  TimePickerDialog(TotoListeDetailView.this, new TimePickerDialog.OnTimeSetListener () {
+                TimePickerDialog timePickerDialog = new  TimePickerDialog(TodoListDetailView.this, new TimePickerDialog.OnTimeSetListener () {
 
                     @Override
                     public void onTimeSet(TimePicker timePicker, int hour, int minute) {
@@ -131,7 +136,7 @@ public class TotoListeDetailView extends AppCompatActivity {
                     public boolean onNavigationItemSelected(MenuItem item) {
                         switch (item.getItemId()) {
                             case R.id.action_cancel:
-                                Intent todoListIntent = new Intent(TotoListeDetailView.this, TodoListeOverview.class);
+                                Intent todoListIntent = new Intent(TodoListDetailView.this, TodoListOverview.class);
                                 startActivity(todoListIntent);
                                 return true;
                             case R.id.action_check:
@@ -139,20 +144,18 @@ public class TotoListeDetailView extends AppCompatActivity {
                                 return true;
                             case R.id.action_delete:
                                 deleteItem();
-                                return true;
                         }
-                        return true;
+                        return false;
                     }
          });
     }
 
     private void saveItem () {
-        Intent returnIntent = new Intent(this, TodoListeOverview.class);
+        Intent returnIntent = new Intent(this, TodoListOverview.class);
         todoItem.setName(todoName.getText().toString());
         todoItem.setDescription(todoDescription.getText().toString());
         todoItem.setTodoDone(todoDone.isChecked());
         todoItem.setImportant(todoImportant.isChecked());
-        // TODO time
         todoItem.setDate(calender.getTimeInMillis());
         returnIntent.putExtra("saveTodo", todoItem);
         setResult(Activity.RESULT_OK, returnIntent);
@@ -161,100 +164,51 @@ public class TotoListeDetailView extends AppCompatActivity {
 
     private void deleteItem () {
 
-        new AlertDialog.Builder(this)
-                .setMessage("Are you sure to delete this Todo Item?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-
-                        Intent returnIntent = new Intent(TotoListeDetailView.this, TodoListeOverview.class);
-                        returnIntent.putExtra("deleteTodo", todoItem);
-                        setResult(RESULT_DELETE, returnIntent);
-                        finish();
-
-                    }
-                })
-                .setNegativeButton("No", null)
-                .show();
-    }
-
-    private void addContact() {
-
-        Intent contactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
-        startActivityForResult(contactIntent, 1 );
-    }
-
-    private void processSelectedContact (Uri uri) {
-        Cursor cursor = getContentResolver().query(uri,null, null, null, null);
-        cursor.moveToNext();
-        String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-        long contactId = cursor.getLong(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
-
-        Log.i("Contact Name: ", name);
-        Cursor phoneCursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", new String[]{String.valueOf(contactId)}, null);
-        if (phoneCursor.getCount() > 0) {
-            phoneCursor.moveToFirst();
-            do {
-                String phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                int phoneNumberType = phoneCursor.getInt(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DATA2));
-
-                if (phoneNumberType == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) {
-                    Log.i("mobile number", phoneNumber);
-                    break;
-                }
-
-            } while (phoneCursor.moveToNext());
-        }
-        long emailId = cursor.getLong(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID));
-        Cursor emailCursor = getContentResolver().query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,null,ContactsContract.CommonDataKinds.Email.CONTACT_ID + "=?", new String[]{String.valueOf(emailId)}, null);
-        if (emailCursor.getCount() > 0) {
-            emailCursor.moveToFirst();
-            do {
-                String email = emailCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
-
-                Log.i("email", email);
-
-            } while (phoneCursor.moveToNext());
-        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        //builder.setCancelable(true);
+        // Add the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                Intent returnIntent = new Intent(TodoListDetailView.this, TodoListOverview.class);
+                returnIntent.putExtra("deleteTodo", todoItem);
+                setResult(RESULT_DELETE, returnIntent);
+                finish();
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        // Set other dialog properties
+        builder.setMessage(R.string.delete_todo);
+        // Create the AlertDialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
 
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.detail_navigation_contacts_items, menu);
+        inflater.inflate(R.menu.detail_navigation_contact_list, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_contacts) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, 100);
-                //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-            } else {
-                addContact();
-            }
+        if (item.getItemId() == R.id.action_contact_list) {
+            // show new Activity with list of contacts
+            Intent contactIntent = new Intent(this, ContactList.class);
+            contactIntent.putExtra("todoItem",todoItem);
+            startActivityForResult(contactIntent, 1);
         }
         return true;
     }
 
-    public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                           int[] grantResults) {
-        if (requestCode == 100) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission is granted
-                addContact();
-            } else {
-                Toast.makeText(this, "Until you grant the permission, we canot read contacts", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            processSelectedContact(data.getData());
+
+        if (requestCode == 1 && resultCode == Activity.RESULT_OK) {
+                TodoItem tempTodo = (TodoItem) data.getSerializableExtra("todoItem");
+                todoItem.setContacts(tempTodo.getContacts());
         }
     }
 }

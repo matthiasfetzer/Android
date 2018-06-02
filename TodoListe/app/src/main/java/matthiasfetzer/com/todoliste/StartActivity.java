@@ -27,7 +27,7 @@ public class StartActivity extends AppCompatActivity {
 
                 } else {
                     Toast.makeText(StartActivity.this, "Webservice not available, using local Data!!", Toast.LENGTH_LONG).show();
-                    Intent callTodoList = new Intent(StartActivity.this, TodoListeOverview.class);
+                    Intent callTodoList = new Intent(StartActivity.this, TodoListOverview.class);
                     startActivity(callTodoList);
 
                 }

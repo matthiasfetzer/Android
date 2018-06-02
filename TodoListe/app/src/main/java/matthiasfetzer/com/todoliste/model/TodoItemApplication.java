@@ -63,14 +63,41 @@ public class TodoItemApplication extends Application implements ITodoItemCRUDOpe
 
     }
 
+    @SuppressLint("StaticFieldLeak")
     @Override
-    public void readTodoItem(long id, CallbackFunction<TodoItem> callback) {
+    public void readTodoItem(long id, final CallbackFunction<TodoItem> callback) {
+        new AsyncTask<Long, Void, TodoItem>() {
 
+            @Override
+            protected TodoItem doInBackground(Long... longs) {
+                return syncCRUDOperations.readTodoItem(longs[0]);
+            }
+
+            @Override
+            protected void onPostExecute(TodoItem result) {
+                callback.process(result);
+            }
+        }.execute(id);
     }
 
+    @SuppressLint("StaticFieldLeak")
     @Override
-    public void updateTodoItem(long id, TodoItem todoItem, CallbackFunction<TodoItem> callback) {
+    public void updateTodoItem(long id, final TodoItem todoItem, final CallbackFunction<TodoItem> callback) {
 
+        new AsyncTask<Object, Void, TodoItem>() {
+
+            @Override
+            protected TodoItem doInBackground(Object... objects) {
+                Long tempId = (Long)objects[0];
+                TodoItem tempTodo = (TodoItem)objects[1];
+                return syncCRUDOperations.updateTodoItem(tempId, tempTodo);
+            }
+
+            @Override
+            protected void onPostExecute(TodoItem todoItem) {
+                callback.process(todoItem);
+            }
+        }.execute(id, todoItem);
 
     }
 

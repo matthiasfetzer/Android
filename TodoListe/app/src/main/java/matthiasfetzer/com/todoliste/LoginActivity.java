@@ -14,7 +14,6 @@ import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -35,10 +34,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import matthiasfetzer.com.todoliste.model.ITodoItemCRUDOperationsAsync;
-import matthiasfetzer.com.todoliste.model.SynchTodoItemCRUDOperationsImpl;
 import matthiasfetzer.com.todoliste.model.TodoItemApplication;
 import matthiasfetzer.com.todoliste.model.User;
 
@@ -53,7 +50,7 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
-    /**
+    /*
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
@@ -342,7 +339,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 showProgress(false);
 
                 if (isAuthenticated) {
-                    Intent callOverviewActivity = new Intent(LoginActivity.this, TodoListeOverview.class);
+                    Intent callOverviewActivity = new Intent(LoginActivity.this, TodoListOverview.class);
                     startActivity(callOverviewActivity);
                 } else {
                     mPasswordView.setError(getString(R.string.error_incorrect_login));

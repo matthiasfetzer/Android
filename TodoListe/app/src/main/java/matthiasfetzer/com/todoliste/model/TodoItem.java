@@ -1,10 +1,13 @@
 package matthiasfetzer.com.todoliste.model;
 
+import android.net.Uri;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by matthiasfetzer on 28.03.18.
@@ -21,6 +24,7 @@ public class TodoItem implements Serializable{
     private boolean important;
     @SerializedName("expiry")
     private long date;
+    private List<String> contacts;
 
 
     public TodoItem() {
@@ -90,4 +94,22 @@ public class TodoItem implements Serializable{
         this.id = id;
     }
 
+    public List<String> getContacts() {
+        return contacts;
+    }
+
+    public void setContacts(List<String> contacts) {
+        this.contacts = contacts;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+            if (obj == null) return false;
+            if (obj == this) return true;
+            if (!(obj instanceof TodoItem)) return false;
+            TodoItem o = (TodoItem) obj;
+            return o.id == this.id;
+    }
 }
+
